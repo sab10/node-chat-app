@@ -12,6 +12,14 @@ socket.on('newMessage', function (message) {
   console.log('New Message', message);
 });
 
+socket.on('messageAdmin', function (message) {
+  console.log(`Message from admin: ${message.text}`);
+});
+
+socket.on('newUser', function (message){
+  console.log(message.text);
+});
+
 //socket.emit('createMessage', {
 //  to : 'server@email.com',
 //  text : 'Ciao, sono swag'

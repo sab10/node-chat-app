@@ -17,6 +17,14 @@ var io = socketIO(server);
 io.on('connection', (socket) => {
   console.log('New user connected');
 
+  socket.emit('messageAdmin', {
+    text : 'Welcome to the chat brother'
+  });
+
+  socket.broadcast.emit('newUser', {
+    text : 'New user joined'
+  });
+
   socket.on('disconnect', () => {
     console.log('Disconnected from server');
   });
@@ -29,10 +37,17 @@ io.on('connection', (socket) => {
 
   socket.on('createMessage', (newMessage) => {
     //console.log('Create Message', newMessage);
-    io.emit('newMessage', {
-      from : newMessage.from,
-      text : newMessage.text,
-      createdAt : new Date().getTime()
+
+    //io.emit('newMessage', {   //this emit take all the messages from clients and send it back to everyone(even the one who sent it)
+    //  from : newMessage.from,
+    //  text : newMessage.text,
+    //  createdAt : new Date().getTime()
+    //});
+
+    socket.broadcast.emit('newMessage', { // this send the message to all but not to the one who write it
+        from : newMessage.from,
+        text : newMessage.text,
+        createdAt : new Date().getTime()
     })
   });
 });
