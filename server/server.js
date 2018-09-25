@@ -21,14 +21,19 @@ io.on('connection', (socket) => {
     console.log('Disconnected from server');
   });
 
-  socket.emit('newMessage', {
-    from : 'server@email.com',
-    text : 'Puzzi',
-    createAt : 123
-  });
+  //socket.emit('newMessage', {
+  //  from : 'server@email.com',
+  //  text : 'Puzzi',
+  //  createAt : 123
+  //});
 
   socket.on('createMessage', (newMessage) => {
-    console.log('Create Message', newMessage);
+    //console.log('Create Message', newMessage);
+    io.emit('newMessage', {
+      from : newMessage.from,
+      text : newMessage.text,
+      createdAt : new Date().getTime()
+    })
   });
 });
 
