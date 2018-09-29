@@ -33,7 +33,7 @@ io.on('connection', (socket) => {
   //  createAt : 123
   //});
 
-  socket.on('createMessage', (newMessage) => {
+  socket.on('createMessage', (newMessage, callback) => {
     //console.log('Create Message', newMessage);
 
     //io.emit('newMessage', {   //this emit take all the messages from clients and send it back to everyone(even the one who sent it)
@@ -44,6 +44,8 @@ io.on('connection', (socket) => {
 
     socket.broadcast.emit('newMessage',generateMessage(newMessage.from,newMessage.text));
     console.log(`I sent a message from ${newMessage.from} to the other windows`);
+
+    callback('I have receiced the message, thanks');
   });
 });
 
