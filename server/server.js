@@ -14,14 +14,14 @@ app.use(express.static(publicPath));
 var server = http.createServer(app);
 var io = socketIO(server);
 
-var {generateMessage} = require('./utils/message.js');
+var {generateMessage, generateLocationMessage} = require('./utils/message.js');
 
 io.on('connection', (socket) => {
   console.log('New user connected');
 
-  socket.emit('messageAdmin',generateMessage('Admin', 'Welcome to the chat'));
+  socket.emit('newMessage',generateMessage('Admin', 'Welcome to the chat'));
 
-  socket.broadcast.emit('newUser',generateMessage('Admin', 'New user joined'));
+  socket.broadcast.emit('newMessage',generateMessage('Admin', 'New user joined'));
 
   socket.on('disconnect', () => {
     console.log('Disconnected from server');
@@ -42,10 +42,15 @@ io.on('connection', (socket) => {
     //  createdAt : new Date().getTime()
     //});
 
-    socket.broadcast.emit('newMessage',generateMessage(newMessage.from,newMessage.text));
+    //socket.broadcast.emit('newMessage',generateMessage(newMessage.from,newMessage.text)); // I will use io .emit because we want to read in the cht the message we have sent
+    io.emit('newMessage', generateMessage(newMessage.from, newMessage.text));
     console.log(`I sent a message from ${newMessage.from} to the other windows`);
 
     callback('I have receiced the message, thanks');
+  });
+
+  socket.on('createLocationMessage' , (coords) => {
+    io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude,coords.longitude));
   });
 });
 
