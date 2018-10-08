@@ -2,7 +2,8 @@ const path = require('path'); // this modules is already installed with node js 
 const express = require('express');
 const socketIO = require('socket.io');
 const http = require('http');
-
+const {isRealString} = require('./utils/validation.js');
+const {Users} = require('./utils/users.js');
 
 const publicPath = path.join(__dirname, '/../public');
 //console.log(__dirname+'/../public'); // example
@@ -13,17 +14,41 @@ app.use(express.static(publicPath));
 
 var server = http.createServer(app);
 var io = socketIO(server);
+var users = new Users();
 
 var {generateMessage, generateLocationMessage} = require('./utils/message.js');
 
 io.on('connection', (socket) => {
   console.log('New user connected');
 
+  socket.on('join', (params, callback) => {
+    if(!isRealString(params.name) || !isRealString(params.room)) {
+       return callback('Name and room name required.');
+    }
+
+    socket.join(params.room);
+    users.removeUser(socket.id);
+    users.addUser(socket.id, params.name, params.room);
+
+    io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+
+    socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin',`${params.name} has joined the room` ));
+
+    callback();
+  });
+
   socket.emit('newMessage',generateMessage('Admin', 'Welcome to the chat'));
 
-  socket.broadcast.emit('newMessage',generateMessage('Admin', 'New user joined'));
+  //socket.broadcast.emit('newMessage',generateMessage('Admin', 'New user joined'));
+
 
   socket.on('disconnect', () => {
+    var user = users.removeUser(socket.id);
+
+    if(user) {
+      io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+      io.to(user.room).emit('newMessage', generateMessage('Admin',`${user.name} has left.`));
+    }
     console.log('Disconnected from server');
   });
 
@@ -42,7 +67,7 @@ io.on('connection', (socket) => {
     //  createdAt : new Date().getTime()
     //});
 
-    //socket.broadcast.emit('newMessage',generateMessage(newMessage.from,newMessage.text)); // I will use io .emit because we want to read in the cht the message we have sent
+    //socket.broadcast.emit('newMessage',generateMessage(newMessage.from,newMessage.text)); // I will use io .emit because we want to read in the chat the message we have sent
     io.emit('newMessage', generateMessage(newMessage.from, newMessage.text));
     console.log(`I sent a message from ${newMessage.from} to the other windows`);
 
